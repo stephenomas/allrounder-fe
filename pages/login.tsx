@@ -55,7 +55,8 @@ function LoginPage() {
     const  checkAuthentication = async () => {
       if (submitData || Cookies.get("AUTH_TOKEN")) {
         await router.push("/"); // Use await to ensure the redirection is complete
-      }
+      
+      } 
       setCheck(false); // Set loading state to false after the check
     };
     checkAuthentication();

@@ -25,8 +25,8 @@ export type Branch = {
   name : string,
   address : string,
   state: string,
-  id : string,
-  createdAt: string,
-  status : boolean
+  id?: string,
+  createdAt?: string,
+  status? : boolean
 
 }

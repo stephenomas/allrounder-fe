@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from "react";
+import React, {useState, useEffect, Dispatch, SetStateAction, useRef} from "react";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import {
@@ -21,40 +21,31 @@ interface ITableProps {
   controls: {
     resultsPerPage: number;
     totalResults: number;
-    
+    currentPage: number;
+    setCurrentPage: Dispatch<SetStateAction<number>>;
   };
   loading: boolean;
-  headers : string[]
+  headers: string[];
 }
 
 
 
 const TableComponent: React.FC<ITableProps> = ({controls, headers, loading, children}) => {
-  // setup pages control for every table
 
-  const [pageTable2, setPageTable2] = useState(1);
-
-  // setup data for every table
-
-  const [dataTable2, setDataTable2] = useState([]);
-
+   const prevStateRef = useRef({
+    total : 0,
+    perpage : 0
+   });
   // pagination change control
-  function onPageChangeTable2(p: number) {
-    setPageTable2(p);
+  function onPageChangeTable(p: number) {
+    controls.setCurrentPage(p);
+
   }
 
+  useEffect(() => {
+    prevStateRef.current = {total : controls.totalResults, perpage : controls.resultsPerPage};
+  },);
 
-
-  // on page change, load new sliced data
-  // here you would make another server request for new data
-  // useEffect(() => {
-  //   setDataTable2(
-  //     data.slice(
-  //       (pageTable2 - 1) * controls.resultsPerPage,
-  //       pageTable2 * controls.resultsPerPage
-  //     )
-  //   );
-  // }, [pageTable2]);
 
   return (
     <TableContainer className="mb-8">
@@ -67,18 +58,15 @@ const TableComponent: React.FC<ITableProps> = ({controls, headers, loading, chil
           </tr>
         </TableHeader>
         <TableBody>
-          {!loading ? (
-            children
-          ) : (
-            <SkeletonTable header={headers} numRows={5} />
-          )}
+          {!loading ? children : <SkeletonTable header={headers} numRows={5} />}
         </TableBody>
       </Table>
       <TableFooter>
         <Pagination
-          totalResults={controls.totalResults}
-          resultsPerPage={controls.resultsPerPage}
-          onChange={onPageChangeTable2}
+        
+          totalResults={controls.totalResults || prevStateRef.current.total}
+          resultsPerPage={controls.resultsPerPage || prevStateRef.current.perpage}
+          onChange={onPageChangeTable}
           label="Table navigation"
         />
       </TableFooter>

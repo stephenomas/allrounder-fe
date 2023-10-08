@@ -51,7 +51,7 @@ function SidebarContent({ linkClicked }: ISidebarContent) {
                 >
                   {routeIsActive(pathname, route) && (
                     <span
-                      className='absolute inset-y-0 left-0 w-1 bg-purple-600 rounded-tr-lg rounded-br-lg'
+                      className='absolute inset-y-0 left-0 w-1 background-primary-color rounded-tr-lg rounded-br-lg'
                       aria-hidden='true'
                     ></span>
                   )}
@@ -69,7 +69,7 @@ function SidebarContent({ linkClicked }: ISidebarContent) {
         )}
       </ul>
       <div className="px-6 my-6">
-        <Button>
+        <Button className='background-primary-color'>
           Create account
           <span className="ml-2" aria-hidden="true">
             +

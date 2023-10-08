@@ -24,13 +24,13 @@ function Layout({ children }: ILayout) {
   useEffect(  () => {
  const checkAuthentication = async () => {
    if (!Cookie.get("AUTH_TOKEN")) {
-     await router.push("/login"); // Use await to ensure the redirection is complete
+    await router.replace("/login");// Use await to ensure the redirection is complete
    }
    setCheck(false); // Set loading state to false after the check
  };
 
  checkAuthentication();
-  }, []);
+  }, [router]);
   if(check){
     return null
   }

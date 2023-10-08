@@ -4,7 +4,7 @@ import { Oval, TailSpin } from "react-loader-spinner";
 export const ButtonSpinner : React.FC = () => {
 return (
   <TailSpin
-    height="30"
+    height="25"
     width="80"
     color="#ffffff"
     ariaLabel="tail-spin-loading"

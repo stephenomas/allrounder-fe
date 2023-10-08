@@ -31,7 +31,7 @@ Axios.interceptors.response.use(
         error.response.data.message === 'unauthorized')
     ) {
       Cookies.remove("AUTH_TOKEN");
-      Router.reload();
+      Router.push('/login');
     }
     return Promise.reject(error);
   }
