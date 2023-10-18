@@ -44,7 +44,7 @@ export class HttpClient {
     return response.data;
   }
 
-  static async post(url: string, data: unknown, options?: any) {
+  static async post(url: string, data?: unknown, options?: any) {
     const response = await Axios.post(url, data, options);
     return response.data;
   }

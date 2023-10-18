@@ -63,7 +63,6 @@ const TableComponent: React.FC<ITableProps> = ({controls, headers, loading, chil
       </Table>
       <TableFooter>
         <Pagination
-        
           totalResults={controls.totalResults || prevStateRef.current.total}
           resultsPerPage={controls.resultsPerPage || prevStateRef.current.perpage}
           onChange={onPageChangeTable}

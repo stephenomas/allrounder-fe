@@ -16,10 +16,19 @@ a {
 }
 
 .background-primary-color {
-@apply bg-blue-700 !important;
+  background-color : #003b75 !important;
   
 }
 
 .text-primary-color {
-  @apply text-blue-700 !important;
+  color : #003b75 !important;
+}
+
+/* Override the button color to blue */
+.pagination-nav .pagination-prev,
+.pagination-nav .pagination-next,
+.pagination-nav .pagination-ellipsis,
+.pagination-nav .pagination-page {
+  background-color: blue !important; /* Change to your desired shade of blue */
+  color: white; /* Change text color if needed */
 }

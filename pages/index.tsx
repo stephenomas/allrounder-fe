@@ -77,7 +77,7 @@ function Dashboard() {
     <Layout>
       <PageTitle>Dashboard</PageTitle>
 
-      <CTA />
+     
 
       {/* <!-- Cards --> */}
       <div className="grid gap-6 mb-8 md:grid-cols-2 xl:grid-cols-4">

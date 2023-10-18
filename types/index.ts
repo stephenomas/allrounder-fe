@@ -30,3 +30,8 @@ export type Branch = {
   status? : boolean
 
 }
+
+export type Permission = {
+  name : string,
+  id: string
+}

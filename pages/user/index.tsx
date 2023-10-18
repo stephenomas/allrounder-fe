@@ -23,9 +23,9 @@ import {
   ModalFooter,
   Label,
   Input,
-  HelperText, 
+  HelperText,
   Select,
-  Alert
+  Alert,
 } from "@roketid/windmill-react-ui";
 import { EditIcon, TrashIcon } from "icons";
 import PageTitle from "example/components/Typography/PageTitle";
@@ -33,36 +33,44 @@ import SectionTitle from "example/components/Typography/SectionTitle";
 import CTA from "example/components/CTA";
 import response, { ITableData } from "utils/demo/tableData";
 import Layout from "containers/Layout";
-import { QueryKey, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  QueryKey,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import TableComponent from "components/table";
 import { nigerianStates } from "utils/constants";
-
 
 type ModalProps = {
   isModalOpen: boolean;
   closeModal: () => void;
   branch?: IBranch;
 };
-function Branch() {
-  const queryClient = useQueryClient()
-  const notify = (message : string) => toast.success(message);
-  const {mutate:toggle, isLoading: toggleLoading, error:toggleError, data:toggleData} =  useMutation(toggleBranch, {
-    onSuccess : (data) => {
-      toast.success(data.message)
-      queryClient.invalidateQueries(["branches"])
-      
+function Users() {
+  const queryClient = useQueryClient();
+  const notify = (message: string) => toast.success(message);
+  const {
+    mutate: toggle,
+    isLoading: toggleLoading,
+    error: toggleError,
+    data: toggleData,
+  } = useMutation(toggleBranch, {
+    onSuccess: (data) => {
+      toast.success(data.message);
+      queryClient.invalidateQueries(["branches"]);
     },
-    onError : (error) => {
-      toast.error((error as any).response.data.message)
-    }
-  })
-
-  const [modal, setModal] = useState({
-  state : false,
-  modal : {}
+    onError: (error) => {
+      toast.error((error as any).response.data.message);
+    },
   });
 
-   function openAddModal(branch : IBranch| boolean) {
+  const [modal, setModal] = useState({
+    state: false,
+    modal: {},
+  });
+
+  function openAddModal(branch: IBranch | boolean) {
     branch
       ? setModal({
           state: true,
@@ -76,44 +84,31 @@ function Branch() {
         })
       : setModal({
           state: true,
-          modal: (
-            <AddModal
-              isModalOpen={true}
-              closeModal={closeAddModal}
-            />
-          ),
+          modal: <AddModal isModalOpen={true} closeModal={closeAddModal} />,
         });
-   }
+  }
 
-
-   function closeAddModal() {
-     setModal({...modal, state:false});
-   }
-
-  
+  function closeAddModal() {
+    setModal({ ...modal, state: false });
+  }
 
   const [currentPage, setCurrentPage] = useState(1);
-  const { isLoading, isError, data, error } = useQuery(["branches", currentPage], () => getBranches(currentPage));
+  const { isLoading, isError, data, error } = useQuery(
+    ["branches", currentPage],
+    () => getBranches(currentPage)
+  );
 
-  
   const headers = [
-    'Name',
-    'Address',
-    'State',
-    'Status',
-    'Date Created',
-    'Actions'
-  ]
-
-
-
+    "Name",
+    "Address",
+    "State",
+    "Status",
+    "Date Created",
+    "Actions",
+  ];
 
   return (
-    <LoadingOverlay
-      active={toggleLoading}
-      spinner
-     
-    >
+    <LoadingOverlay active={toggleLoading} spinner>
       <Layout>
         <PageTitle>Branch</PageTitle>
         <ToastContainer />
@@ -182,11 +177,7 @@ function Branch() {
                       size="small"
                       aria-label="Delete"
                     >
-                      { branch.status ? (
-                        "Disable"
-                      ) : (
-                        "Enable"
-                      )}
+                      {branch.status ? "Disable" : "Enable"}
                     </Button>
                   </div>
                 </TableCell>
@@ -198,44 +189,55 @@ function Branch() {
   );
 }
 
-
-const AddModal : React.FC<ModalProps> =  ({isModalOpen, closeModal, ...props}) => {
-  const queryClient  = useQueryClient();
- const branchSchema =
-   yup.object({
-     name: yup.string().required(),
-     state: yup.string().required(),
-     address: yup.string().required(),
-   });
-   const {
-     register,
-     setValue,
-     handleSubmit,
-     reset,
-     formState: { errors },
-   } = useForm<IBranch>({
-      defaultValues : props.branch,
-     resolver: yupResolver(branchSchema),
-   });
-   const { mutate : addBranch, isLoading, error, data: addBranchData} = useMutation(addBranchFn,{
-    onSuccess : (data) => {
-       queryClient.invalidateQueries(["branches"]);
-       reset()
-    }
-   });
-  const { mutate: updateBranch, isLoading : updateLoading, error: updateError, data: updateBranchData} = useMutation(updateBranchFn, {
+const AddModal: React.FC<ModalProps> = ({
+  isModalOpen,
+  closeModal,
+  ...props
+}) => {
+  const queryClient = useQueryClient();
+  const branchSchema = yup.object({
+    name: yup.string().required(),
+    state: yup.string().required(),
+    address: yup.string().required(),
+  });
+  const {
+    register,
+    setValue,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<IBranch>({
+    defaultValues: props.branch,
+    resolver: yupResolver(branchSchema),
+  });
+  const {
+    mutate: addBranch,
+    isLoading,
+    error,
+    data: addBranchData,
+  } = useMutation(addBranchFn, {
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(["branches"]);
+      reset();
+    },
+  });
+  const {
+    mutate: updateBranch,
+    isLoading: updateLoading,
+    error: updateError,
+    data: updateBranchData,
+  } = useMutation(updateBranchFn, {
     onSuccess: (data) => {
       queryClient.invalidateQueries(["branches"]);
     },
   });
-   const submitForm =handleSubmit((data : any) => {
-    if(props.branch){
-      updateBranch(data)
-    }else{
+  const submitForm = handleSubmit((data: any) => {
+    if (props.branch) {
+      updateBranch(data);
+    } else {
       addBranch(data);
     }
- 
-   });
+  });
 
   return (
     <Modal isOpen={isModalOpen} onClose={closeModal}>
@@ -331,7 +333,6 @@ const AddModal : React.FC<ModalProps> =  ({isModalOpen, closeModal, ...props}) =
       </ModalFooter>
     </Modal>
   );
-}
+};
 
-
-export default Branch;
+export default Users;
