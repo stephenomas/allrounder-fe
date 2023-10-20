@@ -11,6 +11,9 @@ export const user: userRequest = {
   login: (input: loginData) => HttpClient.post(`${URL_PREFIX}/login`, input),
   logout: () => HttpClient.post(`${URL_PREFIX}/logout`),
   create: (input: any) => HttpClient.post(`${URL_PREFIX}/register`, input),
+  index: (page: number) => HttpClient.get(`${URL_PREFIX}`, page),
+  show: (user: string) => HttpClient.get(`${URL_PREFIX}/${user}`),
+  update: (user: string, input: any) => HttpClient.put(`${URL_PREFIX}/${user}`,input),
 };
 
 

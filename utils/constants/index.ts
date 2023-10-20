@@ -1,4 +1,4 @@
-
+export const baseUrl = 'http://10.10.20.38:9000/api/v1/'
 
 export const nigerianStates = [
   "Abia",

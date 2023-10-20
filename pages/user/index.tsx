@@ -3,6 +3,7 @@ import { ToastContainer, toast } from "react-toastify";
 import { ButtonSpinner } from "components/loaders";
 import { yupResolver } from "@hookform/resolvers/yup";
 import LoadingOverlay from "react-loading-overlay-ts";
+import { User as IUser } from "types";
 import {
   addBranch as addBranchFn,
   getBranches,
@@ -41,12 +42,10 @@ import {
 } from "@tanstack/react-query";
 import TableComponent from "components/table";
 import { nigerianStates } from "utils/constants";
+import Link from "next/link";
+import { user } from "api-config/user";
 
-type ModalProps = {
-  isModalOpen: boolean;
-  closeModal: () => void;
-  branch?: IBranch;
-};
+
 function Users() {
   const queryClient = useQueryClient();
   const notify = (message: string) => toast.success(message);
@@ -58,50 +57,26 @@ function Users() {
   } = useMutation(toggleBranch, {
     onSuccess: (data) => {
       toast.success(data.message);
-      queryClient.invalidateQueries(["branches"]);
+      queryClient.invalidateQueries(["users"]);
     },
     onError: (error) => {
       toast.error((error as any).response.data.message);
     },
   });
 
-  const [modal, setModal] = useState({
-    state: false,
-    modal: {},
-  });
-
-  function openAddModal(branch: IBranch | boolean) {
-    branch
-      ? setModal({
-          state: true,
-          modal: (
-            <AddModal
-              isModalOpen={true}
-              closeModal={closeAddModal}
-              branch={branch as IBranch}
-            />
-          ),
-        })
-      : setModal({
-          state: true,
-          modal: <AddModal isModalOpen={true} closeModal={closeAddModal} />,
-        });
-  }
-
-  function closeAddModal() {
-    setModal({ ...modal, state: false });
-  }
 
   const [currentPage, setCurrentPage] = useState(1);
   const { isLoading, isError, data, error } = useQuery(
-    ["branches", currentPage],
-    () => getBranches(currentPage)
+    ["users", currentPage],
+    () => user.index(currentPage)
   );
 
   const headers = [
     "Name",
-    "Address",
-    "State",
+    "Email",
+    "Phone",
+    "Branch",
+    "Type",
     "Status",
     "Date Created",
     "Actions",
@@ -110,20 +85,18 @@ function Users() {
   return (
     <LoadingOverlay active={toggleLoading} spinner>
       <Layout>
-        <PageTitle>Branch</PageTitle>
+        <PageTitle>User</PageTitle>
         <ToastContainer />
         <div className="flex justify-between">
-          <SectionTitle>Branches List</SectionTitle>
-          <Button
-            className="w-20 mb-3 background-primary-color"
-            onClick={() => openAddModal(false)}
-          >
-            <span className="mr-1" aria-hidden="true">
-              +
-            </span>
-            Branch
-          </Button>
-          {modal.state ? modal.modal : ""}
+          <SectionTitle>Users List</SectionTitle>
+          <Link href={"user/create"} passHref>
+            <Button className="w-20 mb-3 background-primary-color">
+              <span className="mr-1" aria-hidden="true">
+                +
+              </span>
+              User
+            </Button>
+          </Link>
         </div>
 
         <TableComponent
@@ -137,47 +110,52 @@ function Users() {
           headers={headers}
         >
           {data &&
-            data.data.branches.map((branch: IBranch, i: number) => (
+            data.data.users.map((user: IUser, i: number) => (
               <TableRow key={i}>
                 <TableCell>
-                  <span className="text-sm font-bold"> {branch.name}</span>
+                  <span className="text-sm font-bold"> {user.name}</span>
                 </TableCell>
                 <TableCell>
-                  <span className="text-sm"> {branch.address}</span>
+                  <span className="text-sm"> {user.email}</span>
                 </TableCell>
                 <TableCell>
-                  <span className="text-sm"> {branch.state}</span>
+                  <span className="text-sm"> {user.phone}</span>
                 </TableCell>
                 <TableCell>
-                  <Badge type={branch.status ? "success" : "danger"}>
-                    {branch.status ? "Active" : "Inactive"}
+                  <span className="text-sm"> {user.branch!.name}</span>
+                </TableCell>
+                <TableCell>
+                  <span className="text-sm">
+                    {" "}
+                    {user.role == 1 ? "Super Administrator" : "Staff"}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <Badge type={user.status ? "success" : "danger"}>
+                    {user.status ? "Active" : "Inactive"}
                   </Badge>
                 </TableCell>
                 <TableCell>
                   <span className="text-sm">
-                    {new Date(branch.createdAt!).toLocaleDateString() ?? ""}
+                    {new Date(user.createdAt!).toLocaleDateString() ?? ""}
                   </span>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center space-x-4">
+                    <Link href={`user/${user.id}`} passHref>
+                      <Button layout="link" size="small" aria-label="Edit">
+                        <EditIcon className="w-5 h-5" aria-hidden="true" />
+                      </Button>
+                    </Link>
                     <Button
-                      onClick={() => openAddModal(branch)}
-                      layout="link"
-                      size="small"
-                      aria-label="Edit"
-                    >
-                      <EditIcon className="w-5 h-5" aria-hidden="true" />
-                    </Button>
-                    <Button
-                      onClick={() => toggle(branch)}
                       className={`${
-                        branch.status ? "bg-red-600" : "bg-green-500"
+                        user.status ? "bg-red-600" : "bg-green-500"
                       } text-white dark:text-white`}
                       layout="link"
                       size="small"
                       aria-label="Delete"
                     >
-                      {branch.status ? "Disable" : "Enable"}
+                      {user.status ? "Disable" : "Enable"}
                     </Button>
                   </div>
                 </TableCell>
@@ -188,151 +166,5 @@ function Users() {
     </LoadingOverlay>
   );
 }
-
-const AddModal: React.FC<ModalProps> = ({
-  isModalOpen,
-  closeModal,
-  ...props
-}) => {
-  const queryClient = useQueryClient();
-  const branchSchema = yup.object({
-    name: yup.string().required(),
-    state: yup.string().required(),
-    address: yup.string().required(),
-  });
-  const {
-    register,
-    setValue,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<IBranch>({
-    defaultValues: props.branch,
-    resolver: yupResolver(branchSchema),
-  });
-  const {
-    mutate: addBranch,
-    isLoading,
-    error,
-    data: addBranchData,
-  } = useMutation(addBranchFn, {
-    onSuccess: (data) => {
-      queryClient.invalidateQueries(["branches"]);
-      reset();
-    },
-  });
-  const {
-    mutate: updateBranch,
-    isLoading: updateLoading,
-    error: updateError,
-    data: updateBranchData,
-  } = useMutation(updateBranchFn, {
-    onSuccess: (data) => {
-      queryClient.invalidateQueries(["branches"]);
-    },
-  });
-  const submitForm = handleSubmit((data: any) => {
-    if (props.branch) {
-      updateBranch(data);
-    } else {
-      addBranch(data);
-    }
-  });
-
-  return (
-    <Modal isOpen={isModalOpen} onClose={closeModal}>
-      <ModalHeader>{props.branch ? "Edit" : "New"} Branch</ModalHeader>
-      {error || addBranchData ? (
-        <Alert type={addBranchData ? "success" : "danger"}>
-          {addBranchData
-            ? addBranchData?.message
-            : error && (error as any).response.data.message}
-        </Alert>
-      ) : (
-        ""
-      )}
-
-      {updateError || updateBranchData ? (
-        <Alert type={updateBranchData ? "success" : "danger"}>
-          {updateBranchData
-            ? updateBranchData?.message
-            : updateError && (updateError as any).response.data.message}
-        </Alert>
-      ) : (
-        ""
-      )}
-
-      <ModalBody>
-        <form>
-          <div className="grid grid-col-1 md:grid-cols-2 gap-4">
-            {props.branch ? (
-              <input
-                hidden={true}
-                value={props.branch?.id}
-                {...register("id")}
-              />
-            ) : (
-              ""
-            )}
-            <Label>
-              <span>Branch Name</span>
-              <Input
-                className="mt-1 "
-                valid={errors.name?.message ? false : undefined}
-                placeholder="Kubwa"
-                {...register("name")}
-              />
-              <HelperText valid={false}>{errors.name?.message}</HelperText>
-            </Label>
-            <Label>
-              <span>Branch Address</span>
-              <Input
-                className="mt-1"
-                valid={errors.address?.message ? false : undefined}
-                placeholder="Branch Address"
-                {...register("address")}
-              />
-              <HelperText valid={false}>{errors.address?.message}</HelperText>
-            </Label>
-          </div>
-          <Label className="mt-4">
-            <span>Select State</span>
-            <Select className="mt-1" {...register("state")}>
-              {props.branch ? <option> {props.branch.state}</option> : ""}
-              {nigerianStates.map((state, i) => (
-                <option key={i} value={state}>
-                  {state}
-                </option>
-              ))}
-            </Select>
-          </Label>
-        </form>
-      </ModalBody>
-      <ModalFooter>
-        <div className="hidden sm:block">
-          <Button layout="outline" onClick={closeModal}>
-            Cancel
-          </Button>
-        </div>
-        <div className="hidden sm:block">
-          <Button onClick={submitForm}>
-            {" "}
-            {isLoading || updateLoading ? <ButtonSpinner /> : "Submit"}
-          </Button>
-        </div>
-        <div className="block w-full sm:hidden">
-          <Button block size="large" layout="outline" onClick={closeModal}>
-            Cancel
-          </Button>
-        </div>
-        <div className="block w-full sm:hidden">
-          <Button onClick={submitForm} block size="large">
-            {isLoading || updateLoading ? <ButtonSpinner /> : "Submit"}
-          </Button>
-        </div>
-      </ModalFooter>
-    </Modal>
-  );
-};
 
 export default Users;
