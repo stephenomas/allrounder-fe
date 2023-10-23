@@ -214,7 +214,7 @@ const AddModal : React.FC<ModalProps> =  ({isModalOpen, closeModal, ...props}) =
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<IBranch>({
+  } = useForm({
     defaultValues: props.branch,
     resolver: joiResolver(branchSchema),
   });
