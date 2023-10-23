@@ -202,7 +202,7 @@ function Branch() {
 
 const AddModal : React.FC<ModalProps> =  ({isModalOpen, closeModal, ...props}) => {
   const queryClient  = useQueryClient();
-  const branchSchema: Schema<IBranch> = Joi.object({
+  const branchSchema = Joi.object({
     name: Joi.string().required(),
     state: Joi.string().required(),
     address: Joi.string().required(),
