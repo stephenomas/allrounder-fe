@@ -36,7 +36,8 @@ import Layout from "containers/Layout";
 import { QueryKey, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import TableComponent from "components/table";
 import { nigerianStates } from "utils/constants";
-
+import Joi, { Schema } from "joi";
+import { joiResolver } from "@hookform/resolvers/joi";
 
 type ModalProps = {
   isModalOpen: boolean;
@@ -201,22 +202,38 @@ function Branch() {
 
 const AddModal : React.FC<ModalProps> =  ({isModalOpen, closeModal, ...props}) => {
   const queryClient  = useQueryClient();
- const branchSchema =
-   yup.object({
-     name: yup.string().required(),
-     state: yup.string().required(),
-     address: yup.string().required(),
-   });
-   const {
-     register,
-     setValue,
-     handleSubmit,
-     reset,
-     formState: { errors },
-   } = useForm<IBranch>({
-      defaultValues : props.branch,
-     resolver: yupResolver(branchSchema),
-   });
+  const branchSchema: Schema<IBranch> = Joi.object({
+    name: Joi.string().required(),
+    state: Joi.string().required(),
+    address: Joi.string().required(),
+  });
+
+  const {
+    register,
+    setValue,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<IBranch>({
+    defaultValues: props.branch,
+    resolver: joiResolver(branchSchema),
+  });
+//  const branchSchema =
+//    yup.object({
+//      name: yup.string().required(),
+//      state: yup.string().required(),
+//      address: yup.string().required(),
+//    });
+//    const {
+//      register,
+//      setValue,
+//      handleSubmit,
+//      reset,
+//      formState: { errors },
+//    } = useForm<IBranch>({
+//       defaultValues : props.branch,
+//      resolver: yupResolver(branchSchema),
+//    });
    const { mutate : addBranch, isLoading, error, data: addBranchData} = useMutation(addBranchFn,{
     onSuccess : (data) => {
        queryClient.invalidateQueries(["branches"]);

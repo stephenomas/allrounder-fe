@@ -28,50 +28,90 @@ import { GetServerSidePropsContext } from "next";
 import { parse } from "cookie";
 import { baseUrl } from "utils/constants";
 import { editUserForm } from '../../../types/index';
+import Joi, { Schema, Reference, ValidationError } from "joi";
+import { joiResolver } from "@hookform/resolvers/joi";
 
 
 const EditUser = ({user} : {user :User}) => {
   const queryClient = useQueryClient()
-  const createFormSchema = yup.object().shape({
-    name: yup.string().required(),
-    email: yup.string().email().required(),
-    password: yup.lazy((value) => {
-    if (value && value.length > 0) {
-      return yup.string()
-        .min(8, 'Password must be at least 8 characters')
-        .required('Password is required');
-    }
-    return yup.string().notRequired();
-  }),
-    confirmPassword: yup.string().oneOf([yup.ref('password')], 'Passwords must match'),
-    phone: yup
-      .string()
+  const createFormSchema: Schema<createUserForm> = Joi.object({
+    name: Joi.string().required(),
+    email: Joi.string().email().required(),
+    password: Joi.string().when("name", {
+      is: Joi.exist(),
+      then: Joi.string().min(8).required().label("Password"),
+      otherwise: Joi.string().strip(), // Remove the field when not present
+    }) as Schema<string>,
+    confirmPassword: Joi.string()
+      .valid(Joi.ref("password"))
+      .label("Confirm Password")
+      .messages({ "any.only": "Passwords must match" }),
+    phone: Joi.string()
       .required()
-      .min(11, "Phone number must be 11 digit")
-      .max(11, "Phone number must be 11 digit"),
-    branch: yup.string().required(),
-    role: yup.number().required(),
-    permissions: yup.array(),
+      .min(11)
+      .max(11)
+      .label("Phone number")
+      .messages({
+        "string.min": "Phone number must be 11 digits",
+        "string.max": "Phone number must be 11 digits",
+      }),
+    branch: Joi.string().required(),
+    role: Joi.number().required(),
+    permissions: Joi.array(),
   });
+
+  // const createFormSchema = yup.object().shape({
+  //   name: yup.string().required(),
+  //   email: yup.string().email().required(),
+  //   password: yup.lazy((value) => {
+  //   if (value && value.length > 0) {
+  //     return yup.string()
+  //       .min(8, 'Password must be at least 8 characters')
+  //       .required('Password is required');
+  //   }
+  //   return yup.string().notRequired();
+  // }),
+  //   confirmPassword: yup.string().oneOf([yup.ref('password')], 'Passwords must match'),
+  //   phone: yup
+  //     .string()
+  //     .required()
+  //     .min(11, "Phone number must be 11 digit")
+  //     .max(11, "Phone number must be 11 digit"),
+  //   branch: yup.string().required(),
+  //   role: yup.number().required(),
+  //   permissions: yup.array(),
+  // });
   const userData = useQuery(['userData', user.id], () => userAPI.show(user.id), {
     initialData :{ data: {data :user}, status: 200, statusText: 'OK', headers: {}, config: {} }
   });
 
-  const defaultValues = {
+  const defaultValues: Partial<createUserForm> = {
     name: userData.data.data.data?.name,
     email: userData.data.data.data?.email,
     phone: userData.data.data.data?.phone,
     role: userData.data.data.data?.role,
     branch: userData.data.data.data?.branch.id,
-    permissions: userData.data.data.data?.permissions
+    permissions: userData.data.data.data?.permissions,
   };
-  const {
-    register,
-    setValue,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<editUserForm>({  defaultValues, resolver: yupResolver(createFormSchema) });
+  // Generate the resolver function based on the schema
+const resolver = joiResolver(createFormSchema);
+const {
+  register,
+  setValue,
+  handleSubmit,
+  formState: { errors },
+  reset,
+} = useForm<editUserForm>({
+  defaultValues,
+  resolver,
+});
+  // const {
+  //   register,
+  //   setValue,
+  //   handleSubmit,
+  //   formState: { errors },
+  //   reset,
+  // } = useForm<editUserForm>({  defaultValues, resolver: yupResolver(createFormSchema) });
   const branches = useQuery(["branches"], () => getBranches());
   const permissions = useQuery(["permissions"], getPermissions);
 

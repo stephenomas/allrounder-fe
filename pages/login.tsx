@@ -17,6 +17,9 @@ import { useLogin } from '../api-config/user';
 import { ButtonSpinner } from "components/loaders";
 import Cookies from "js-cookie";
 import { PageLoader } from '../components/loaders';
+import Joi, { Schema } from "joi";
+import { joiResolver } from "@hookform/resolvers/joi";
+
 
 export const getStaticProps = (context: any) => {
   const jwt = context.req?.cookies?.AUTH_TOKEN;
@@ -35,16 +38,29 @@ export const getStaticProps = (context: any) => {
 };
 
 function LoginPage() {
-  const loginSchema = yup.object({
-  email: yup.string().required().email(),
-  password: yup.string().required(),
+//   const loginSchema = yup.object({
+//   email: yup.string().required().email(),
+//   password: yup.string().required(),
+// });
+
+const loginSchema: Schema<loginData> = Joi.object({
+  email: Joi.string().required().email(),
+  password: Joi.string().required(),
 });
   const { mode } = useContext(WindmillContext);
   const [check, setCheck] = useState(true);
   const router = useRouter();
-  const { register,setValue,handleSubmit,formState: { errors },} = useForm<loginData>({
-    resolver :yupResolver(loginSchema)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<loginData>({
+    resolver: joiResolver(loginSchema),
   });
+  // const { register,setValue,handleSubmit,formState: { errors },} = useForm<loginData>({
+  //   resolver :yupResolver(loginSchema)
+  // });
   const {mutate:login, isLoading, error, data:submitData} = useLogin();
   const submitForm = handleSubmit((data) => {
       login(data)

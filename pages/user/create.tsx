@@ -18,26 +18,63 @@ import { getBranches } from "api-config/branch";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getPermissions } from "api-config/permission";
 import { Branch, createUserForm, Permission } from "types";
-
+import Joi, { Schema } from "joi";
 import * as yup from "yup";
 import { user } from "api-config/user";
 import { ButtonSpinner } from "components/loaders";
 import MyAlert from "components/alert";
+import { joiResolver } from "@hookform/resolvers/joi";
+
 
 
 function Create() {
-  const createFormSchema = yup.object({
-    name: yup.string().required(),
-    email: yup.string().email().required(),
-    password: yup.string().min(8, "Password must be at least 8 characters").required("Password is required"),
-    confirmPassword: yup.string().oneOf([yup.ref("password"), undefined], "Passwords must match").required("Confirm Password is required"),
-    phone: yup.string().required().min(11, "Phone number must be 11 digit").max(11, "Phone number must be 11 digit"),
-    branch: yup.string().required(),
-    role: yup.number().required(),
-    permissions: yup.array()
+  // const createFormSchema = yup.object({
+  //   name: yup.string().required(),
+  //   email: yup.string().email().required(),
+  //   password: yup.string().min(8, "Password must be at least 8 characters").required("Password is required"),
+  //   confirmPassword: yup.string().oneOf([yup.ref("password"), undefined], "Passwords must match").required("Confirm Password is required"),
+  //   phone: yup.string().required().min(11, "Phone number must be 11 digit").max(11, "Phone number must be 11 digit"),
+  //   branch: yup.string().required(),
+  //   role: yup.number().required(),
+  //   permissions: yup.array()
+  // });
+
+  // const {
+  //   register,
+  //   setValue,
+  //   handleSubmit,
+  //   formState: { errors },
+  //   reset,
+  // } = useForm<createUserForm>({
+  //   resolver: yupResolver(createFormSchema),
+  // }); 
+
+  const createFormSchema: Schema<createUserForm> = Joi.object({
+    name: Joi.string().required(),
+    email: Joi.string().email().required(),
+    password: Joi.string().min(8).required().messages({
+      "string.min": "Password must be at least 8 characters",
+    }),
+    confirmPassword: Joi.string()
+      .valid(Joi.ref("password"))
+      .required(),
+    phone: Joi.string().required().min(11).max(11).messages({
+      "string.min": "Phone number must be 11 digits",
+      "string.max": "Phone number must be 11 digits",
+    }),
+    branch: Joi.string().required(),
+    role: Joi.number().required(),
+    permissions: Joi.array().items(Joi.string()),
   });
 
-  const { register,setValue,handleSubmit,formState: { errors }, reset} = useForm<createUserForm>({resolver :yupResolver(createFormSchema) }); 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<createUserForm>({
+    resolver: joiResolver(createFormSchema),
+  });
   const branches =  useQuery(['branches'], () => getBranches())
   const permissions = useQuery(["permissions"], getPermissions);
   const submitForm = useMutation(user.create,{
