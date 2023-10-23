@@ -202,38 +202,38 @@ function Branch() {
 
 const AddModal : React.FC<ModalProps> =  ({isModalOpen, closeModal, ...props}) => {
   const queryClient  = useQueryClient();
-  const branchSchema: Schema<IBranch> = Joi.object({
-    name: Joi.string().required(),
-    state: Joi.string().required(),
-    address: Joi.string().required(),
-  });
+  // const branchSchema: Schema<IBranch> = Joi.object({
+  //   name: Joi.string().required(),
+  //   state: Joi.string().required(),
+  //   address: Joi.string().required(),
+  // });
 
-  const {
-    register,
-    setValue,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<IBranch>({
-    defaultValues: props.branch,
-    resolver: joiResolver(branchSchema),
-  });
-//  const branchSchema =
-//    yup.object({
-//      name: yup.string().required(),
-//      state: yup.string().required(),
-//      address: yup.string().required(),
-//    });
-//    const {
-//      register,
-//      setValue,
-//      handleSubmit,
-//      reset,
-//      formState: { errors },
-//    } = useForm<IBranch>({
-//       defaultValues : props.branch,
-//      resolver: yupResolver(branchSchema),
-//    });
+  // const {
+  //   register,
+  //   setValue,
+  //   handleSubmit,
+  //   reset,
+  //   formState: { errors },
+  // } = useForm<IBranch>({
+  //   defaultValues: props.branch,
+  //   resolver: joiResolver(branchSchema),
+  // });
+ const branchSchema =
+   yup.object({
+     name: yup.string().required(),
+     state: yup.string().required(),
+     address: yup.string().required(),
+   });
+   const {
+     register,
+     setValue,
+     handleSubmit,
+     reset,
+     formState: { errors },
+   } = useForm<IBranch>({
+      defaultValues : props.branch,
+     resolver: yupResolver(branchSchema),
+   });
    const { mutate : addBranch, isLoading, error, data: addBranchData} = useMutation(addBranchFn,{
     onSuccess : (data) => {
        queryClient.invalidateQueries(["branches"]);
