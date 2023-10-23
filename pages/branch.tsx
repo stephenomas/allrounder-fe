@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import { ButtonSpinner } from "components/loaders";
-//import { yupResolver } from "@hookform/resolvers/yup";
+import { yupResolver } from "@hookform/resolvers/yup";
 import LoadingOverlay from "react-loading-overlay-ts";
 import {
   addBranch as addBranchFn,
@@ -202,7 +202,7 @@ function Branch() {
 
 const AddModal : React.FC<ModalProps> =  ({isModalOpen, closeModal, ...props}) => {
   const queryClient  = useQueryClient();
-  const branchSchema = Joi.object({
+  const branchSchema: Schema<IBranch> = Joi.object({
     name: Joi.string().required(),
     state: Joi.string().required(),
     address: Joi.string().required(),
@@ -214,7 +214,7 @@ const AddModal : React.FC<ModalProps> =  ({isModalOpen, closeModal, ...props}) =
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm({
+  } = useForm<IBranch>({
     defaultValues: props.branch,
     resolver: joiResolver(branchSchema),
   });
