@@ -10,7 +10,7 @@ import {
 import CTA from "example/components/CTA";
 import PageTitle from "example/components/Typography/PageTitle";
 import SectionTitle from "example/components/Typography/SectionTitle";
-import { yupResolver } from "@hookform/resolvers/yup";
+//import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
 import Layout from "containers/Layout";
 import { MailIcon } from "icons";
