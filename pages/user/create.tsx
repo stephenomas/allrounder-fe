@@ -10,7 +10,7 @@ import {
 import CTA from "example/components/CTA";
 import PageTitle from "example/components/Typography/PageTitle";
 import SectionTitle from "example/components/Typography/SectionTitle";
-//import { yupResolver } from "@hookform/resolvers/yup";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
 import Layout from "containers/Layout";
 import { MailIcon } from "icons";
@@ -24,67 +24,54 @@ import { user } from "api-config/user";
 import { ButtonSpinner } from "components/loaders";
 import MyAlert from "components/alert";
 import { joiResolver } from "@hookform/resolvers/joi";
+import { Formik, Form, Field, useFormik } from "formik";
 
 
 
 function Create() {
-  // const createFormSchema = yup.object({
-  //   name: yup.string().required(),
-  //   email: yup.string().email().required(),
-  //   password: yup.string().min(8, "Password must be at least 8 characters").required("Password is required"),
-  //   confirmPassword: yup.string().oneOf([yup.ref("password"), undefined], "Passwords must match").required("Confirm Password is required"),
-  //   phone: yup.string().required().min(11, "Phone number must be 11 digit").max(11, "Phone number must be 11 digit"),
-  //   branch: yup.string().required(),
-  //   role: yup.number().required(),
-  //   permissions: yup.array()
-  // });
-
-  // const {
-  //   register,
-  //   setValue,
-  //   handleSubmit,
-  //   formState: { errors },
-  //   reset,
-  // } = useForm<createUserForm>({
-  //   resolver: yupResolver(createFormSchema),
-  // }); 
-
-  const createFormSchema: Schema<createUserForm> = Joi.object({
-    name: Joi.string().required(),
-    email: Joi.string().email().required(),
-    password: Joi.string().min(8).required().messages({
-      "string.min": "Password must be at least 8 characters",
-    }),
-    confirmPassword: Joi.string()
-      .valid(Joi.ref("password"))
-      .required(),
-    phone: Joi.string().required().min(11).max(11).messages({
-      "string.min": "Phone number must be 11 digits",
-      "string.max": "Phone number must be 11 digits",
-    }),
-    branch: Joi.string().required(),
-    role: Joi.number().required(),
-    permissions: Joi.array().items(Joi.string()),
+  const createFormSchema = yup.object({
+    name: yup.string().required(),
+    email: yup.string().email().required(),
+    password: yup.string().min(8, "Password must be at least 8 characters").required("Password is required"),
+    confirmPassword: yup.string().oneOf([yup.ref("password"), undefined], "Passwords must match").required("Confirm Password is required"),
+    phone: yup.string().required().min(11, "Phone number must be 11 digit").max(11, "Phone number must be 11 digit"),
+    branch: yup.string().required(),
+    role: yup.number().required(),
+    permissions: yup.array()
   });
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<createUserForm>({
-    resolver: joiResolver(createFormSchema),
+   const initialValues: createUserForm =  {
+     name: "",
+     email: "",
+     password: "",
+     confirmPassword: "",
+     phone: "",
+     branch : "",
+     role : 1,
+     permissions:[]
+
+   };
+  const formik = useFormik({
+    initialValues,
+    validationSchema: createFormSchema,
+    onSubmit: (data :any) => submitForm.mutate(data),
   });
+
   const branches =  useQuery(['branches'], () => getBranches())
   const permissions = useQuery(["permissions"], getPermissions);
   const submitForm = useMutation(user.create,{
     onSuccess: (data) => {
-      reset()
+      formik.handleReset
+      formik.resetForm()
       setPermissionState(false);
     }
   })
 
   
+  const selectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    permissionBox(e);
+    formik.handleChange(e);
+  };
   const [permissionState, setPermissionState] = useState(false)
   const permissionBox = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -96,65 +83,105 @@ function Create() {
 
       <SectionTitle>User Info</SectionTitle>
       <div className="px-4 py-3 mb-8 bg-white rounded-lg shadow-md dark:bg-gray-800">
-        {<MyAlert element={submitForm} message={'User Created Successfully'}/>}
-        <form onSubmit={handleSubmit((data) => submitForm.mutate(data))}>
+        {<MyAlert element={submitForm} message={"User Created Successfully"} />}
+
+        <form onSubmit={formik.handleSubmit}>
           <div className="grid md:grid-cols-2 md:space-x-2 ">
             <Label className="mt-5">
               <span>Full Name</span>
-              <Input className="mt-1" {...register("name")} />
-              <HelperText valid={false}>{errors.name?.message}</HelperText>
+              <Input
+                name="name"
+                className="mt-1"
+                value={formik.values.name}
+                onChange={formik.handleChange}
+              />
+              {formik.touched.name && formik.errors.name && (
+                <HelperText valid={false}>{formik.errors.name}</HelperText>
+              )}
             </Label>
             <Label className="mt-5">
               <span>Email</span>
-              <Input className="mt-1" type="email" {...register("email")} />
-              <HelperText valid={false}>{errors.email?.message}</HelperText>
+              <Input
+                name="email"
+                className="mt-1"
+                type="email"
+                value={formik.values.email}
+                onChange={formik.handleChange}
+              />
+              {formik.touched.email && formik.errors.email && (
+                <HelperText valid={false}>{formik.errors.email}</HelperText>
+              )}
             </Label>
           </div>
           <div className="grid  md:grid-cols-2 md:space-x-2 ">
             <Label className="mt-5">
               <span>Password</span>
               <Input
+                name="password"
                 className="mt-1"
                 type="password"
-                {...register("password")}
+                value={formik.values.password}
+                onChange={formik.handleChange}
               />
-              <HelperText valid={false}>{errors.password?.message}</HelperText>
+              {formik.touched.password && formik.errors.password && (
+                <HelperText valid={false}>{formik.errors.password}</HelperText>
+              )}
             </Label>
             <Label className="mt-5">
               <span>Confirm Password</span>
               <Input
+                name="confirmPassword"
                 className="mt-1"
                 type="password"
-                {...register("confirmPassword")}
+                value={formik.values.confirmPassword}
+                onChange={formik.handleChange}
               />
-              <HelperText valid={false}>
-                {errors.confirmPassword?.message}
-              </HelperText>
+              {formik.touched.confirmPassword &&
+                formik.errors.confirmPassword && (
+                  <HelperText valid={false}>
+                    {formik.errors.confirmPassword}
+                  </HelperText>
+                )}
             </Label>
           </div>
           <div className="grid md:grid-cols-2 md:space-x-2 ">
             <Label className="mt-5">
               <span>Phone</span>
-              <Input className="mt-1" {...register("phone")} />
-              <HelperText valid={false}>{errors.phone?.message}</HelperText>
+              <Input
+                name="phone"
+                className="mt-1"
+                value={formik.values.phone}
+                onChange={formik.handleChange}
+              />
+              {formik.touched.phone && formik.errors.phone && (
+                <HelperText valid={false}>{formik.errors.phone}</HelperText>
+              )}
             </Label>
             <Label className="mt-5">
               <span>Role</span>
               <Select
-                {...register("role")}
+                name="role"
+                value={formik.values.role}
                 className="mt-1"
-                onChange={permissionBox}
+                onChange={selectChange}
               >
                 <option value="1">Super Administrator</option>
                 <option value="2">Staff</option>
               </Select>
-              <HelperText valid={false}>{errors.role?.message}</HelperText>
+              {formik.touched.role && formik.errors.role && (
+                <HelperText valid={false}>{formik.errors.role}</HelperText>
+              )}
             </Label>
           </div>
           <div className="grid md:grid-cols-2 md:space-x-2 ">
             <Label className="mt-5">
               <span>Branch</span>
-              <Select className="mt-1" {...register("branch")}>
+              <Select
+                name="branch"
+                className="mt-1"
+                value={formik.values.branch}
+                onChange={formik.handleChange}
+              >
                 {branches.data
                   ? branches.data.data.branches.map(
                       (branch: Branch, i: number) => (
@@ -166,12 +193,20 @@ function Create() {
                   : null}
                 <option></option>
               </Select>
-              <HelperText valid={false}>{errors.branch?.message}</HelperText>
+              {formik.touched.branch && formik.errors.branch && (
+                <HelperText valid={false}>{formik.errors.branch}</HelperText>
+              )}
             </Label>
             {permissionState ? (
               <Label className="mt-5">
                 <span>Permission</span>
-                <Select className="mt-1" multiple {...register("permissions")}>
+                <Select
+                  className="mt-1"
+                  multiple
+                  name="permissions"
+                  value={formik.values.permissions}
+                  onChange={formik.handleChange}
+                >
                   {permissions.data
                     ? permissions.data.data.map(
                         (permission: Permission, i: number) => (
@@ -182,9 +217,9 @@ function Create() {
                       )
                     : null}
                 </Select>
-                <HelperText valid={false}>
-                  {errors.permissions?.message}
-                </HelperText>
+                {formik.touched.permissions && formik.errors.permissions && (
+                  <HelperText valid={false}>{formik.errors.permissions}</HelperText>
+                )}
               </Label>
             ) : null}
           </div>

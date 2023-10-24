@@ -1,7 +1,9 @@
 import { Alert } from "@roketid/windmill-react-ui";
 
  const MyAlert : React.FC<{element: any, message: string}>  =  ({element, message}) => {
-
+  if(element.error){
+   // console.log(element.error)
+  }
 
   return (
     <>
@@ -10,7 +12,7 @@ import { Alert } from "@roketid/windmill-react-ui";
           {element.data
             ? message
             : element.error &&
-              (element.error as any).response.data.message}
+              (element.error as any).response?.data.message}
         </Alert>
       ) : (
         ""

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import { ButtonSpinner } from "components/loaders";
-import { yupResolver } from "@hookform/resolvers/yup";
+import { Formik, Field, Form, ErrorMessage } from "formik";
 import LoadingOverlay from "react-loading-overlay-ts";
 import {
   addBranch as addBranchFn,
@@ -10,7 +10,6 @@ import {
   updateBranch as updateBranchFn,
 } from "api-config/branch";
 import * as yup from "yup";
-import { useForm } from "react-hook-form";
 import { Branch as IBranch } from "types";
 import {
   TableRow,
@@ -38,6 +37,8 @@ import TableComponent from "components/table";
 import { nigerianStates } from "utils/constants";
 import Joi, { Schema } from "joi";
 import { joiResolver } from "@hookform/resolvers/joi";
+import MyAlert from "components/alert";
+import { updateBranch } from '../api-config/branch';
 
 type ModalProps = {
   isModalOpen: boolean;
@@ -75,6 +76,8 @@ function Branch() {
             />
           ),
         })
+  
+        
       : setModal({
           state: true,
           modal: (
@@ -202,150 +205,147 @@ function Branch() {
 
 const AddModal : React.FC<ModalProps> =  ({isModalOpen, closeModal, ...props}) => {
   const queryClient  = useQueryClient();
-  // const branchSchema: Schema<IBranch> = Joi.object({
-  //   name: Joi.string().required(),
-  //   state: Joi.string().required(),
-  //   address: Joi.string().required(),
-  // });
+  const branchSchema =
+    yup.object().shape({
+      name: yup.string().required(),
+      state: yup.string().required(),
+      address: yup.string().required()
+    });
+   
+  const initialValues : IBranch = props.branch || {
+    name: "",
+    state: "",
+    address: "",
+  };
 
-  // const {
-  //   register,
-  //   setValue,
-  //   handleSubmit,
-  //   reset,
-  //   formState: { errors },
-  // } = useForm<IBranch>({
-  //   defaultValues: props.branch,
-  //   resolver: joiResolver(branchSchema),
-  // });
- const branchSchema =
-   yup.object({
-     name: yup.string().required(),
-     state: yup.string().required(),
-     address: yup.string().required(),
-   });
-   const {
-     register,
-     setValue,
-     handleSubmit,
-     reset,
-     formState: { errors },
-   } = useForm<IBranch>({
-      defaultValues : props.branch,
-     resolver: yupResolver(branchSchema),
-   });
-   const { mutate : addBranch, isLoading, error, data: addBranchData} = useMutation(addBranchFn,{
+   const addBranch = useMutation(addBranchFn,{
     onSuccess : (data) => {
        queryClient.invalidateQueries(["branches"]);
-       reset()
+      
+    },
+    onError : (data) => {
+
     }
    });
-  const { mutate: updateBranch, isLoading : updateLoading, error: updateError, data: updateBranchData} = useMutation(updateBranchFn, {
+  const updateBranch = useMutation(updateBranchFn, {
     onSuccess: (data) => {
       queryClient.invalidateQueries(["branches"]);
     },
   });
-   const submitForm =handleSubmit((data : any) => {
+   const submitForm =(data :any) => {
+  
     if(props.branch){
-      updateBranch(data)
+      updateBranch.mutate(data)
     }else{
-      addBranch(data);
+      addBranch.mutate(data);
     }
  
-   });
+   };
 
   return (
     <Modal isOpen={isModalOpen} onClose={closeModal}>
-      <ModalHeader>{props.branch ? "Edit" : "New"} Branch</ModalHeader>
-      {error || addBranchData ? (
-        <Alert type={addBranchData ? "success" : "danger"}>
-          {addBranchData
-            ? addBranchData?.message
-            : error && (error as any).response.data.message}
-        </Alert>
-      ) : (
-        ""
-      )}
+      <Formik
+        initialValues={initialValues}
+        validationSchema={branchSchema}
+        onSubmit={submitForm}
+      >
+        {({ values, handleChange, isSubmitting, touched, errors }) => (
+          <Form>
+            <ModalHeader>{props.branch ? "Edit" : "New"} Branch</ModalHeader>
+            {<MyAlert element={addBranch} message={"Branch Created Successfully"} />}
 
-      {updateError || updateBranchData ? (
-        <Alert type={updateBranchData ? "success" : "danger"}>
-          {updateBranchData
-            ? updateBranchData?.message
-            : updateError && (updateError as any).response.data.message}
-        </Alert>
-      ) : (
-        ""
-      )}
+            {<MyAlert element={updateBranch} message={"Branch Updated Successfully"} />}
 
-      <ModalBody>
-        <form>
-          <div className="grid grid-col-1 md:grid-cols-2 gap-4">
-            {props.branch ? (
-              <input
-                hidden={true}
-                value={props.branch?.id}
-                {...register("id")}
-              />
-            ) : (
-              ""
-            )}
-            <Label>
-              <span>Branch Name</span>
-              <Input
-                className="mt-1 "
-                valid={errors.name?.message ? false : undefined}
-                placeholder="Kubwa"
-                {...register("name")}
-              />
-              <HelperText valid={false}>{errors.name?.message}</HelperText>
-            </Label>
-            <Label>
-              <span>Branch Address</span>
-              <Input
-                className="mt-1"
-                valid={errors.address?.message ? false : undefined}
-                placeholder="Branch Address"
-                {...register("address")}
-              />
-              <HelperText valid={false}>{errors.address?.message}</HelperText>
-            </Label>
-          </div>
-          <Label className="mt-4">
-            <span>Select State</span>
-            <Select className="mt-1" {...register("state")}>
-              {props.branch ? <option> {props.branch.state}</option> : ""}
-              {nigerianStates.map((state, i) => (
-                <option key={i} value={state}>
-                  {state}
-                </option>
-              ))}
-            </Select>
-          </Label>
-        </form>
-      </ModalBody>
-      <ModalFooter>
-        <div className="hidden sm:block">
-          <Button layout="outline" onClick={closeModal}>
-            Cancel
-          </Button>
-        </div>
-        <div className="hidden sm:block">
-          <Button onClick={submitForm}>
-            {" "}
-            {isLoading || updateLoading ? <ButtonSpinner /> : "Submit"}
-          </Button>
-        </div>
-        <div className="block w-full sm:hidden">
-          <Button block size="large" layout="outline" onClick={closeModal}>
-            Cancel
-          </Button>
-        </div>
-        <div className="block w-full sm:hidden">
-          <Button onClick={submitForm} block size="large">
-            {isLoading || updateLoading ? <ButtonSpinner /> : "Submit"}
-          </Button>
-        </div>
-      </ModalFooter>
+            <ModalBody>
+              <div className="grid grid-col-1 md:grid-cols-2 gap-4">
+                {props.branch ? (
+                  <Field
+                    type="text"
+                    name="id"
+                    hidden={true}
+                    value={props.branch.id}
+                  />
+                ) : (
+                  ""
+                )}
+                <Label>
+                  <span>Branch Name</span>
+                  <Input
+                    className="mt-1"
+                    name="name"
+                    type="text"
+                    value={values.name}
+                    onChange={handleChange}
+                  />
+                  {touched.name && errors.name && (
+                    <HelperText valid={false}>{errors.name}</HelperText>
+                  )}
+                </Label>
+                <Label>
+                  <span>Branch Address</span>
+                  <Input
+                    type="text"
+                    className="mt-1"
+                    name="address"
+                    value={values.address}
+                    onChange={handleChange}
+                  />
+                  {touched.address && errors.address && (
+                    <HelperText valid={false}>{errors.address}</HelperText>
+                  )}
+                </Label>
+              </div>
+              <Label className="mt-4">
+                <span>Select State</span>
+                <Select className="mt-1" name="state" onChange={handleChange}>
+                  {props.branch ? <option> {props.branch.state}</option> : ""}
+                  {nigerianStates.map((state, i) => (
+                    <option key={i} value={state}>
+                      {state}
+                    </option>
+                  ))}
+                </Select>
+              </Label>
+            </ModalBody>
+            <ModalFooter>
+              <div className="hidden sm:block">
+                <Button layout="outline" onClick={closeModal}>
+                  Cancel
+                </Button>
+              </div>
+              <div className="hidden sm:block">
+                <Button type="submit">
+                  {" "}
+                  {addBranch.isLoading || updateBranch.isLoading ? (
+                    <ButtonSpinner />
+                  ) : (
+                    "Submit"
+                  )}
+                </Button>
+              </div>
+              <div className="block w-full sm:hidden">
+                <Button
+                  block
+                  size="large"
+                  layout="outline"
+                  onClick={closeModal}
+                >
+                  Cancel
+                </Button>
+              </div>
+              <div className="block w-full sm:hidden">
+                <Button type="submit" block size="large">
+                  {addBranch.isLoading || updateBranch.isLoading ? (
+                    <ButtonSpinner />
+                  ) : (
+                    "Submit"
+                  )}
+                </Button>
+              </div>
+            </ModalFooter>
+          </Form>
+        )}
+      </Formik>
     </Modal>
   );
 }
