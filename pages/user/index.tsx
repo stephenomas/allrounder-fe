@@ -11,7 +11,6 @@ import {
   updateBranch as updateBranchFn,
 } from "api-config/branch";
 import * as yup from "yup";
-import { useForm } from "react-hook-form";
 import { Branch as IBranch } from "types";
 import {
   TableRow,

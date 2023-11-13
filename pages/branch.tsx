@@ -36,7 +36,6 @@ import { QueryKey, useMutation, useQuery, useQueryClient } from "@tanstack/react
 import TableComponent from "components/table";
 import { nigerianStates } from "utils/constants";
 import Joi, { Schema } from "joi";
-import { joiResolver } from "@hookform/resolvers/joi";
 import MyAlert from "components/alert";
 import { updateBranch } from '../api-config/branch';
 

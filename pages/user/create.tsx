@@ -10,8 +10,6 @@ import {
 import CTA from "example/components/CTA";
 import PageTitle from "example/components/Typography/PageTitle";
 import SectionTitle from "example/components/Typography/SectionTitle";
-import { yupResolver } from "@hookform/resolvers/yup";
-import { useForm } from "react-hook-form";
 import Layout from "containers/Layout";
 import { MailIcon } from "icons";
 import { getBranches } from "api-config/branch";
@@ -23,7 +21,6 @@ import * as yup from "yup";
 import { user } from "api-config/user";
 import { ButtonSpinner } from "components/loaders";
 import MyAlert from "components/alert";
-import { joiResolver } from "@hookform/resolvers/joi";
 import { Formik, Form, Field, useFormik } from "formik";
 
 
